@@ -5,6 +5,7 @@ namespace app\models;
 
 
 
+use app\helpers\HashHelper;
 use Yii;
 use yii\base\ErrorException;
 use yii\base\Model;
@@ -15,14 +16,19 @@ class Duplicates extends Model
     protected $_arrHash;
     protected $_duplicates;
 
-
+    /**
+     * Find duplicates
+     * @return bool
+     * @throws ErrorException
+     */
     public function find()
     {
 
         if($this->files){
-            $this->_arrHash = $this->hash();
+            $this->_arrHash = HashHelper::generateHash('sha1',$this->files); //Generate hash for each file
             asort($this->_arrHash);
             $arrCountValues = array_count_values($this->_arrHash);
+            //Filter if in array exist duplicates
            foreach ($arrCountValues as $hash => $count){
                 if($count > 1){
                     $this->_duplicates[] = $this->findDuplicates($hash, $count);
@@ -39,16 +45,12 @@ class Duplicates extends Model
         }
     }
 
-    protected function hash()
-    {
-        $hashes = [];
-        foreach ($this->files as $file){
-            $hashes[$file] = hash_file('sha1', $file);
-        }
-
-        return $hashes;
-    }
-
+    /**
+     * Find duplicates for current file
+     * @param $currentHash
+     * @param $count
+     * @return array
+     */
     protected function findDuplicates($currentHash, $count)
     {
         $result = [];
@@ -66,6 +68,11 @@ class Duplicates extends Model
         return $result;
     }
 
+    /**
+     * Save results to file
+     * @param $name
+     * @return bool|string
+     */
     public function saveToFile($name)
     {
         $pathToSave = Yii::getAlias('@webroot/files/'.$name.'.txt');
@@ -90,6 +97,10 @@ class Duplicates extends Model
 
     }
 
+    /**
+     * Get duplicates
+     * @return null
+     */
     public function getDuplicates()
     {
         if($this->_duplicates){

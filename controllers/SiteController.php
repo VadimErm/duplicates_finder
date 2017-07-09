@@ -14,15 +14,27 @@ use yii\web\Controller;
 
 class SiteController extends Controller
 {
+    public function actions()
+    {
+        return [
+            'error' => [
+                'class' => 'yii\web\ErrorAction',
+            ],
 
+        ];
+    }
 
+    /**
+     * Duplicates finder form
+     * @return string|\yii\web\Response
+     */
     public function actionIndex()
     {
         $model = new FileInputForm();
         if ($model->load(Yii::$app->request->post())) {
            $nPath = FileHelper::normalizePath($model->path);
            try{
-               $files = FileHelper::findFiles($nPath);
+               $files = FileHelper::findFiles($nPath, ['recursive' =>false]);
                 if(!empty($files)){
                     $duplicates = new Duplicates();
                     $duplicates->files = $files;
